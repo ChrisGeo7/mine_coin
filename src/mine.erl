@@ -1,20 +1,28 @@
 -module(mine).
 -export([mine_coin/0,spawn_actors/3,start_actors/2]).
 
+match(ZeroCount,String) ->
+    Pattern = "^0{"++integer_to_list(ZeroCount)++"}.*$",
+    case re:run(String,Pattern) of 
+        {match,Captured} -> true;
+        nomatch -> false
+        end.
+
 mine_coin() ->
     % Write a pattern matching function for this regex
     % Have a control over the number of workers to be spawned!
     receive
         {Master, HashZero}->
             % io:fwrite("~nInside MINING from ~w",[Master]),
-            Million = "1000000000000",
+            % Million = "1000000000000",
             NumOfChar= rand:uniform(16),
             RandomString = "christy.george;" ++ base64:encode(crypto:strong_rand_bytes(NumOfChar)),
             HashString = io_lib:format("~64.16.0b", [binary:decode_unsigned(crypto:hash(sha256,RandomString))]),
-            SubString = lists:sublist(HashString,HashZero),
-            LeadingZeroString = lists:sublist(Million,2,HashZero),
-            Status= string:equal(SubString,LeadingZeroString),
+            % SubString = lists:sublist(HashString,HashZero),
+            % LeadingZeroString = lists:sublist(Million,2,HashZero),
+            % Status= string:equal(SubString,LeadingZeroString),
             % io:fwrite("~nCompleted MINING Status ~w ~w",[self(),Status]),
+            Status = match(HashZero,HashString),
             if(Status==true)->
                 Master ! {self(), RandomString, HashString}
             ;(Status==false)->
