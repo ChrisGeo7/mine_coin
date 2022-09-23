@@ -14,6 +14,11 @@ collector(CoinCount) when CoinCount == 0->
     io:fwrite("~nCollection done"),
     {_,WallClock} = statistics(wall_clock),
     {_,CPUClock} =  statistics(runtime),
+    lists:foreach(fun(Node) ->
+                {stopTimer, Node} ! {self(),node()},
+                io:fwrite("~nSent stop to Node ~w",[Node])
+            end, nodes()),
+     
     io:fwrite("~nTIMER : ~w CPU : ~w  Core Ratio : ~w ~n",[WallClock,CPUClock,CPUClock/WallClock]),
     halt();
 
