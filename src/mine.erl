@@ -4,13 +4,12 @@
 match(ZeroCount,String) ->
     Pattern = "^0{"++integer_to_list(ZeroCount)++"}.*$",
     case re:run(String,Pattern) of 
-        {match,Captured} -> true;
+        {match,_} -> true;
         nomatch -> false
         end.
 
 mine_coin() ->
     % Write a pattern matching function for this regex
-    % Have a control over the number of workers to be spawned!
     receive
         {Master, HashZero}->
             % io:fwrite("~nInside MINING from ~w",[Master]),
@@ -26,15 +25,12 @@ mine_coin() ->
             if(Status==true)->
                 Master ! {self(), RandomString, HashString}
             ;(Status==false)->
-                % io:fwrite("~nCall self ~w ~p",[Master,HashZero]),
                 self() ! {Master,HashZero},
                 mine_coin()
-                % io:fwrite("OVER")
             end
     end.
 
 spawn_actors(_, _,ActorCount) when ActorCount ==0 ->
-    %  io:fwrite("~n~w Coins mined",[CoinCount]),
     true;
 
 spawn_actors(Node, HashZero, ActorCount) when ActorCount > 0 ->
@@ -49,6 +45,5 @@ start_actors(Node, HashZero)  ->
         {Pid, RandomString, HashString}->
                 io:fwrite("~n PID: ~w found a coin", [self()]),
                 {collectorProcess, node()} ! {node(),RandomString, HashString}
-                % start_actors(Node,HashZero, ActorCount - 1, CoinCount - 1)
     end,
     start_actors(Node,HashZero).
