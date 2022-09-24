@@ -9,7 +9,7 @@ connect_worker(HashZero, ActorCount, TotalCores)->
                 CoinCount ->
                     WorkRatio = Cores/(TotalCores + Cores),
                     WorkLoad = trunc(WorkRatio * CoinCount),
-                    io:fwrite("~nCLIENT CONNECTED... ~w ~w Cores ~w Giving workload of ~w",[Worker,Node,Cores, WorkLoad]),
+                    io:fwrite("~nCLIENT CONNECTED...~w~n Cores available :~w Giving workload of ~w",[Node,Cores, WorkLoad]),
                     counterProcess ! CoinCount - WorkLoad,
                     Worker ! {HashZero, ActorCount, WorkLoad}
             end,
@@ -19,7 +19,7 @@ connect_worker(HashZero, ActorCount, TotalCores)->
 collector()-> 
     receive
         {Node, RandomString, HashString}->
-            io:fwrite("~nNode ~w Random String:~s Coin:~s",[Node,RandomString, HashString]),
+            io:fwrite("~nInput String: ~s Coin: ~s Found by ~w",[RandomString, HashString, Node]),
             collector()
     end.
 
