@@ -1,43 +1,36 @@
 -module(server).
--export([start/2,connect_worker/2,collector/1]).
--import_module([mine]).
+-export([start/2,connect_worker/3,collector/0]).
 
-connect_worker(HashZero, ActorCount)->
+connect_worker(HashZero, ActorCount, TotalCores)->
     receive
-        {Worker,Node} -> %BUT WHY!!!!!
-            io:fwrite("~nCLIENT CONNECTED... ~w ~w",[Worker,Node]),
-            Worker ! {HashZero, ActorCount}
-    end,
-    connect_worker(HashZero,ActorCount).
+        {Worker,Node, Cores} -> %BUT WHY!!!!!
+            counterProcess ! {self()},
+            receive
+                CoinCount ->
+                    WorkRatio = Cores/(TotalCores + Cores),
+                    WorkLoad = trunc(WorkRatio * CoinCount),
+                    io:fwrite("~nCLIENT CONNECTED... ~w ~w Cores ~w Giving workload of ~w",[Worker,Node,Cores, WorkLoad]),
+                    counterProcess ! CoinCount - WorkLoad,
+                    Worker ! {HashZero, ActorCount, WorkLoad}
+            end,
+            connect_worker(HashZero,ActorCount, TotalCores + Cores)
+    end.
 
-collector(CoinCount) when CoinCount == 0->
-    io:fwrite("~nCollection done"),
-    {_,WallClock} = statistics(wall_clock),
-    {_,CPUClock} =  statistics(runtime),
-    lists:foreach(fun(Node) ->
-                {stopTimer, Node} ! {self(),node()},
-                io:fwrite("~nSent stop to Node ~w",[Node])
-            end, nodes()),
-     
-    io:fwrite("~nTIMER : ~w CPU : ~w  Core Ratio : ~w ~n",[WallClock,CPUClock,CPUClock/WallClock]),
-    halt();
-
-collector(CoinCount) when CoinCount > 0-> 
+collector()-> 
     receive
         {Node, RandomString, HashString}->
-            io:fwrite("~nNode ~w Random String:~s Coin:~s",[Node,RandomString, HashString])
-    end,
-    collector(CoinCount - 1).
+            io:fwrite("~nNode ~w Random String:~s Coin:~s",[Node,RandomString, HashString]),
+            collector()
+    end.
 
-%add clock
-%add provision to get input coin number
-%
 start(HashZero, CoinCount) ->
     io:fwrite("~nStarting Server..."),
     ActorCount = 50,
+    ServerCores=erlang:system_info(logical_processors_available),
     statistics(wall_clock),
     statistics(runtime),
-    register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount])),
-    register(collectorProcess,spawn(node(),server,collector,[CoinCount])),
-    mine:spawn_actors(node(),HashZero,ActorCount).
+    register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount,ServerCores])),
+    register(collectorProcess,spawn(node(),server,collector,[])),
+    register(counterProcess, spawn(mine, counter,[CoinCount])),
+    mine:spawn_actors(HashZero,ActorCount, node()).
     
