@@ -9,7 +9,7 @@ call_server(Server)->
     {serverProcess, Server} ! {self(),node(),ClientCores},
     receive
         {HashZero, ActorCount, CoinCount} ->
-            io:fwrite("~n Connected to server, Starting to mine, ZeroCount : ~p Coincount ~w",[HashZero, CoinCount]),
+            io:fwrite("~n Connected to server, Starting to mine... ~nNumber of Coins to mine ~w~n",[CoinCount]),
             statistics(wall_clock),
             statistics(runtime),
             register(counterProcess, spawn(mine, counter,[CoinCount])),

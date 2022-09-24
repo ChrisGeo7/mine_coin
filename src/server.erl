@@ -1,5 +1,5 @@
 -module(server).
--export([start/2,connect_worker/3,collector/0]).
+-export([start/2,connect_worker/3,collector/1]).
 
 connect_worker(HashZero, ActorCount, TotalCores)->
     receive
@@ -16,11 +16,14 @@ connect_worker(HashZero, ActorCount, TotalCores)->
             connect_worker(HashZero,ActorCount, TotalCores + Cores)
     end.
 
-collector()-> 
+collector(CoinCount) when CoinCount==0 ->
+    halt();
+
+collector(CoinCount)-> 
     receive
         {Node, RandomString, HashString}->
             io:fwrite("~nInput String: ~s Coin: ~s Found by ~w",[RandomString, HashString, Node]),
-            collector()
+            collector(CoinCount -1 )
     end.
 
 start(HashZero, CoinCount) ->
@@ -29,8 +32,8 @@ start(HashZero, CoinCount) ->
     ServerCores=erlang:system_info(logical_processors_available),
     statistics(wall_clock),
     statistics(runtime),
-    register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount,ServerCores])),
-    register(collectorProcess,spawn(node(),server,collector,[])),
     register(counterProcess, spawn(mine, counter,[CoinCount])),
+    register(collectorProcess,spawn(node(),server,collector,[])),
+    register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount,ServerCores])),
     mine:spawn_actors(HashZero,ActorCount, node()).
     

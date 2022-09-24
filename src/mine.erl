@@ -44,8 +44,8 @@ counter(CoinCount) when CoinCount ==0 ->
     io:fwrite("~nMining completed..."),
     {_,WallClock} = statistics(wall_clock),
     {_,CPUClock} =  statistics(runtime),
-    io:fwrite("~nTIMER : ~w CPU : ~w  Core Ratio : ~w ~n",[WallClock,CPUClock,CPUClock/WallClock]),
-    halt();
+    io:fwrite("~nTIMER : ~w CPU : ~w  Core Ratio : ~w ~n",[WallClock,CPUClock,CPUClock/WallClock]);
+
 
 counter(CoinCount) -> 
     receive
