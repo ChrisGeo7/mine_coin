@@ -45,6 +45,7 @@ counter(CoinCount) when CoinCount ==0 ->
     {_,WallClock} = statistics(wall_clock),
     {_,CPUClock} =  statistics(runtime),
     io:fwrite("~nTIMER : ~w CPU : ~w  Core Ratio : ~w ~n",[WallClock,CPUClock,CPUClock/WallClock]);
+    halt();
 
 
 counter(CoinCount) -> 
