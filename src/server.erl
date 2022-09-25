@@ -16,7 +16,7 @@ connect_worker(HashZero, ActorCount, TotalCores)->
             connect_worker(HashZero,ActorCount, TotalCores + Cores)
     end.
 
-collector(CoinCount) when CoinCount==0 ->
+collector(CoinCount) when CoinCount==0 ->    
     halt();
 
 collector(CoinCount)-> 
@@ -26,6 +26,7 @@ collector(CoinCount)->
             collector(CoinCount -1 )
     end.
 
+
 start(HashZero, CoinCount) ->
     io:fwrite("~nStarting Server..."),
     ActorCount = 50,
@@ -33,7 +34,7 @@ start(HashZero, CoinCount) ->
     statistics(wall_clock),
     statistics(runtime),
     register(counterProcess, spawn(mine, counter,[CoinCount])),
-    register(collectorProcess,spawn(node(),server,collector,[])),
+    register(collectorProcess,spawn(node(),server,collector,[CoinCount])),
     register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount,ServerCores])),
     mine:spawn_actors(HashZero,ActorCount, node()).
     

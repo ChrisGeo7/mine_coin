@@ -2,6 +2,8 @@
 -export([call_server/1]).
 -import_module(server).
 
+
+
 call_server(Server)->
     io:fwrite("Connecting to ~s~n",[Server]),
     net_kernel:connect_node(Server),
@@ -13,5 +15,7 @@ call_server(Server)->
             statistics(wall_clock),
             statistics(runtime),
             register(counterProcess, spawn(mine, counter,[CoinCount])),
-            mine:spawn_actors(HashZero,ActorCount, Server)
+            register(stopper, spawn(mine, stop,[CoinCount])),
+            mine:spawn_actors(self(),HashZero,ActorCount, Server)
+
     end.
