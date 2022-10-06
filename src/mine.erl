@@ -19,8 +19,16 @@ mine_coin() ->
                 Caller ! {self(), RandomString, HashString},
                 {counterProcess,node()} ! {true,1}
             ;(Status==false)->
-                self() ! {Caller,HashZero},
-                mine_coin()
+                counterProcess ! {self()},
+                receive
+                    CoinCount ->
+                        if(CoinCount >0 ) ->
+                            self() ! {Caller,HashZero},
+                            mine_coin()
+                        ; (CoinCount =< 0) ->
+                            exit("Exit")
+                        end
+                end
             end
     end.
 
@@ -32,11 +40,19 @@ spawn_actors(HashZero, ActorCount, CollectorNode) when ActorCount > 0 ->
     spawn_actors(HashZero, ActorCount - 1, CollectorNode).
 
 start_actors(HashZero, CollectorNode)  ->
-    Pid = spawn(mine, mine_coin, []),
-    Pid ! {self(), HashZero},
+    counterProcess ! {self()},
     receive
-        {Pid, RandomString, HashString}->
-                {collectorProcess, CollectorNode} ! {node(),RandomString, HashString}
+        CoinCount ->
+            if(CoinCount >0 ) ->
+                Pid = spawn(mine, mine_coin, []),
+                Pid ! {self(), HashZero},
+                receive
+                    {Pid, RandomString, HashString}->
+                            {collectorProcess, CollectorNode} ! {node(),RandomString, HashString}
+                end
+            ; (CoinCount =< 0) ->
+                exit("Exit")
+            end
     end,
     start_actors(HashZero, CollectorNode).
 

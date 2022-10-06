@@ -33,7 +33,7 @@ start(HashZero, CoinCount) ->
     statistics(wall_clock),
     statistics(runtime),
     register(counterProcess, spawn(mine, counter,[CoinCount])),
-    register(collectorProcess,spawn(node(),server,collector,[])),
+    register(collectorProcess,spawn(node(),server,collector,[CoinCount])),
     register(serverProcess,spawn(node(),server,connect_worker,[HashZero,ActorCount,ServerCores])),
     mine:spawn_actors(HashZero,ActorCount, node()).
     
